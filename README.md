@@ -51,6 +51,7 @@ make install-local
 
 Output from `make iso` / `make rpi` goes to `output/`. Run `make clean` to remove build artifacts.
 
+<<<<<<< Updated upstream
 ## Related
 
 - [CognitiveOS](https://github.com/CognitiveOS-Project/cognitiveos) — main project repository
@@ -62,6 +63,17 @@ Output from `make iso` / `make rpi` goes to `output/`. Run `make clean` to remov
 - [core-mcp-bridges](https://github.com/CognitiveOS-Project/core-mcp-bridges) — MCP bridges included in the distro
 - [Product Specs](https://github.com/CognitiveOS-Project/product-specs) — distro build specification
 - [CognitiveOS Project](https://github.com/CognitiveOS-Project) — GitHub organization
+=======
+## Contributing
+
+1. Branch from `development`, not `main`
+2. Use topic branches: `feature/<name>`, `fix/<name>`, `bugfix/<name>`
+3. Open a PR to `development` with a clear title and description
+4. Merge via squash after review
+5. Changes flow to `main` via a release PR
+
+See the [SDLC repo](https://github.com/CognitiveOS-Project/sdlc) for the full contribution guide, code review standards, and testing strategy.
+>>>>>>> Stashed changes
 
 ## Author
 
