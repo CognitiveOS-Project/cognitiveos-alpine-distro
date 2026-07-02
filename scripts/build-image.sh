@@ -113,6 +113,13 @@ if command -v apk >/dev/null 2>&1 && command -v git >/dev/null 2>&1; then
         sudo apk add --no-cache $MKIMAGE_DEPS
     fi
 
+    echo "  -> Generating abuild signing key..."
+    if [ "$(id -u)" -eq 0 ]; then
+        abuild-keygen -a -n
+    else
+        sudo abuild-keygen -a -n
+    fi
+
     if [ ! -d "$APORTS_DIR" ]; then
         echo "  -> Cloning Alpine aports repo (shallow)..."
         git clone --depth=1 "$APORTS_GIT" "$APORTS_DIR"
@@ -145,6 +152,7 @@ su builder -p -c '
 export COGNITIVEOS_PACKAGES_FILE=/workspace/packages.${PROFILE}
 export COGNITIVEOS_OVERLAY_DIR=/workspace/overlay
 cd ${APORTS_DIR}/scripts
+abuild-keygen -a -n
 ./mkimage.sh \
     --profile cognitiveos \
     --outdir /workspace/output \
