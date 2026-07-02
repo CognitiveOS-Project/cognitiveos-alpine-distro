@@ -1,3 +1,8 @@
+# shellcheck shell=sh
+# shellcheck disable=SC2034
+# This file is sourced by aports/scripts/mkimage.sh, not executed directly.
+# Variables set here are read by mkimage.sh's build_profile() function.
+
 profile_cognitiveos() {
     apkovl="genapkovl-cognitiveos.sh"
     hostname="cognitiveos"
