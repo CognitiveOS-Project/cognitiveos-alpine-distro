@@ -49,7 +49,7 @@ if [ ! -f "${LLAMA_CPP_DIR}/CMakeLists.txt" ]; then
     git clone --depth=1 https://github.com/ggerganov/llama.cpp.git "${LLAMA_CPP_DIR}"
 fi
 cd "${LLAMA_CPP_DIR}"
-cmake -B build -DLLAMA_NO_ACCELERATE=1 -DLLAMA_STATIC=1 -DLLAMA_NATIVE=0 \
+cmake -B build -DLLAMA_NATIVE=0 \
   -DBUILD_SHARED_LIBS=0 -DLLAMA_BUILD_TESTS=0 \
   -DLLAMA_BUILD_EXAMPLES=0 -DLLAMA_BUILD_SERVER=0 \
   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="${LLAMA_CPP_DIR}/build"

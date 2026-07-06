@@ -18,7 +18,7 @@ RUN cd /src/inference && \
     mkdir -p vendor && \
     git clone --depth=1 https://github.com/ggerganov/llama.cpp.git vendor/llama.cpp && \
     cd vendor/llama.cpp && \
-    cmake -B build -DLLAMA_NO_ACCELERATE=1 -DLLAMA_STATIC=1 -DLLAMA_NATIVE=0 \
+    cmake -B build -DLLAMA_NATIVE=0 \
       -DBUILD_SHARED_LIBS=0 -DLLAMA_BUILD_TESTS=0 \
       -DLLAMA_BUILD_EXAMPLES=0 -DLLAMA_BUILD_SERVER=0 \
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$PWD/build" && \
