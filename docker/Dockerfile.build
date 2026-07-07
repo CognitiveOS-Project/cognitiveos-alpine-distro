@@ -1,4 +1,3 @@
-# Stage 1: Build Go binaries from each repo's Makefile
 FROM golang:1.25-alpine AS builder
 
 ARG GIT_CLONE_PREFIX=git@github.com:
@@ -7,56 +6,35 @@ RUN mkdir -p /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts 2>/d
 
 WORKDIR /src
 
-# Clone all repos
 RUN for repo in cpm cognitiveosd cli inference core-mcp-bridges; do \
         git clone --depth=1 "${GIT_CLONE_PREFIX}CognitiveOS-Project/${repo}.git" "${repo}"; \
-    done
-
-# Build llama.cpp (vendored in inference repo)
-RUN cd /src/inference && \
-    mkdir -p vendor && \
-    git clone --depth=1 https://github.com/ggerganov/llama.cpp.git vendor/llama.cpp && \
-    cd vendor/llama.cpp && \
+    done && \
+    mkdir -p /src/inference/vendor && \
+    git clone --depth=1 https://github.com/ggerganov/llama.cpp.git /src/inference/vendor/llama.cpp && \
+    cd /src/inference/vendor/llama.cpp && \
     cmake -B build -DLLAMA_NATIVE=0 \
       -DBUILD_SHARED_LIBS=0 -DLLAMA_BUILD_TESTS=0 \
       -DLLAMA_BUILD_EXAMPLES=0 -DLLAMA_BUILD_SERVER=0 \
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$PWD/build" && \
-    cmake --build build --config Release --target llama -j$(nproc)
+    cmake --build build --config Release --target llama -j$(nproc) && \
+    mkdir -p /out/bin/bridges && \
+    cd /src/cpm && make build && cp -a build/bin/* /out/bin/ && \
+    cd /src/cognitiveosd && make build && cp -a build/bin/* /out/bin/ && \
+    cd /src/cli && make build && cp -a build/bin/* /out/bin/ && \
+    cd /src/inference && make build && cp -a build/bin/* /out/bin/ && \
+    cd /src/core-mcp-bridges && make build && cp -a build/bin/* /out/bin/
 
-RUN mkdir -p /out/bin/bridges
-
-# Build each repo using its Makefile
-RUN cd /src/cpm && make build && cp -a build/bin/* /out/bin/
-RUN cd /src/cognitiveosd && make build && cp -a build/bin/* /out/bin/
-RUN cd /src/cli && make build && cp -a build/bin/* /out/bin/
-RUN cd /src/inference && make build && cp -a build/bin/* /out/bin/
-RUN cd /src/core-mcp-bridges && make build && cp -a build/bin/* /out/bin/
-
-# Stage 2: Runtime base
 FROM alpine:edge
 
 RUN apk add --no-cache \
-    alpine-base \
-    busybox \
-    openrc \
-    linux-lts \
-    alsa-utils \
-    alsa-lib \
-    iw \
-    wpa_supplicant \
-    dhcpcd \
-    libgpiod \
-    kbd \
-    mpv \
-    dosfstools \
-    e2fsprogs \
-    squashfs-tools \
-    acpid
+    alpine-base busybox openrc linux-lts \
+    alsa-utils alsa-lib \
+    iw wpa_supplicant dhcpcd \
+    libgpiod kbd mpv \
+    dosfstools e2fsprogs squashfs-tools acpid
 
 COPY --from=builder /out/bin/ /usr/local/bin/
 COPY overlay/ /
-
-RUN mkdir -p /cognitiveos/run /cognitiveos/patches /cognitiveos/data /cognitiveos/packages
-RUN chmod 755 /usr/local/bin/*
+RUN mkdir -p /cognitiveos/{run,patches,data,packages} && chmod 755 /usr/local/bin/*
 
 ENTRYPOINT ["/sbin/init"]

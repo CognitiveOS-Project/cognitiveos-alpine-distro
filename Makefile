@@ -15,31 +15,21 @@ SCRIPTS_DIR := ./scripts
 all: iso rpi checksums sign
 
 iso: install-local
-	@echo "==> Building x86_64 ISO..."
-	@bash $(SCRIPTS_DIR)/build-image.sh --profile x86_64
+	bash $(SCRIPTS_DIR)/build-image.sh --profile x86_64
 
 rpi: install-local
-	@echo "==> Building aarch64 RPi image..."
-	@bash $(SCRIPTS_DIR)/build-image.sh --profile aarch64
+	bash $(SCRIPTS_DIR)/build-image.sh --profile aarch64
 
 clean:
-	@echo "==> Cleaning build artifacts..."
-	rm -rf $(BUILD_DIR) $(OUTPUT_DIR)
-	rm -f *.iso *.img *.tar.gz
-	@echo "  done."
+	rm -rf $(BUILD_DIR) $(OUTPUT_DIR) *.iso *.img *.tar.gz
 
 distclean: clean
-	@echo "==> Removing build cache..."
 	rm -rf ./cache ./work
-	@echo "  done."
 
 docker:
-	@echo "==> Building Docker build image..."
 	docker build -f docker/Dockerfile.build -t cognitiveos-builder .
-	@echo "  done."
 
 shell:
-	@echo "==> Starting interactive shell in build container..."
 	docker run --rm -it \
 		-v "$(CURDIR)/../cpm:/src/cpm" \
 		-v "$(CURDIR)/../cognitiveosd:/src/cognitiveosd" \
@@ -50,26 +40,18 @@ shell:
 		cognitiveos-builder /bin/sh
 
 checksums:
-	@echo "==> Generating checksums..."
-	@bash $(SCRIPTS_DIR)/sign.sh
+	bash $(SCRIPTS_DIR)/sign.sh
 
 sign: checksums
-	@echo "  done."
 
 install-local: deps
-	@echo "==> Building all binaries from local source..."
 	bash $(SCRIPTS_DIR)/build-binaries.sh
-	@echo "==> Building overlay..."
 	bash $(SCRIPTS_DIR)/build-overlay.sh
-	@echo "  done."
 
 distro-tarball: install-local
-	@echo "==> Building distro tarball..."
 	bash $(SCRIPTS_DIR)/build-distro-tarball.sh
-	@echo "  done."
 
 publish-cgp:
-	@echo "==> Publishing .cgp packages to registry..."
 	@if [ -z "$${REGISTRY_TOKEN}" ]; then \
 		echo "  ERROR: REGISTRY_TOKEN not set"; exit 1; \
 	fi
@@ -79,19 +61,13 @@ publish-cgp:
 		[ "$$name" = "bridges" ] && continue; \
 		bash $(SCRIPTS_DIR)/publish-cgp.sh --name "$$name" --version "$$VERSION" --binary "$$bin"; \
 	done
-	@echo "  done."
 
 docker-release:
-	@echo "==> Building Docker release image..."
 	docker build -f docker/Dockerfile.release -t cognitiveos:$(VERSION) .
-	@echo "  done."
 
 release: distro-tarball docker-release
-	@echo "==> Release complete. Artifacts in $(OUTPUT_DIR)"
 	ls -lh $(OUTPUT_DIR)/
 
 deps:
-	@echo "==> Checking dependencies..."
 	@command -v docker >/dev/null 2>&1 || echo "  WARNING: docker not found"
 	@command -v make >/dev/null 2>&1 || echo "  WARNING: make not found"
-	@echo "  done."

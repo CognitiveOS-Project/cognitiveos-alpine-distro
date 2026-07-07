@@ -1,4 +1,3 @@
-# Stage 1: Build Go binaries from each repo's Makefile
 FROM golang:1.25-alpine AS builder
 
 ARG GIT_CLONE_PREFIX=git@github.com:
@@ -9,32 +8,25 @@ WORKDIR /src
 
 RUN for repo in cpm cognitiveosd cli inference core-mcp-bridges; do \
         git clone --depth=1 "${GIT_CLONE_PREFIX}CognitiveOS-Project/${repo}.git" "${repo}"; \
-    done
+    done && \
+    mkdir -p /out/bin/bridges && \
+    cd /src/cpm && make build && cp -a build/bin/* /out/bin/ && \
+    cd /src/cognitiveosd && make build && cp -a build/bin/* /out/bin/ && \
+    cd /src/cli && make build && cp -a build/bin/* /out/bin/ && \
+    cd /src/inference && make build && cp -a build/bin/* /out/bin/ && \
+    cd /src/core-mcp-bridges && make build && cp -a build/bin/* /out/bin/
 
-RUN mkdir -p /out/bin/bridges
-
-RUN cd /src/cpm && make build && cp -a build/bin/* /out/bin/
-RUN cd /src/cognitiveosd && make build && cp -a build/bin/* /out/bin/
-RUN cd /src/cli && make build && cp -a build/bin/* /out/bin/
-RUN cd /src/inference && make build && cp -a build/bin/* /out/bin/
-RUN cd /src/core-mcp-bridges && make build && cp -a build/bin/* /out/bin/
-
-# Stage 2: Minimal runtime image
 FROM alpine:edge
 
 RUN apk add --no-cache \
     alpine-base busybox openrc linux-lts \
     alsa-utils alsa-lib \
     iw wpa_supplicant dhcpcd \
-    libgpiod kbd \
-    mpv \
-    dosfstools e2fsprogs squashfs-tools \
-    acpid
+    libgpiod kbd mpv \
+    dosfstools e2fsprogs squashfs-tools acpid
 
 COPY --from=builder /out/bin/ /usr/local/bin/
 COPY overlay/ /
-
-RUN mkdir -p /cognitiveos/run /cognitiveos/patches /cognitiveos/data /cognitiveos/packages
-RUN chmod 755 /usr/local/bin/*
+RUN mkdir -p /cognitiveos/{run,patches,data,packages} && chmod 755 /usr/local/bin/*
 
 ENTRYPOINT ["/sbin/init"]

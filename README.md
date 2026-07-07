@@ -34,8 +34,7 @@ make rpi
 ├── scripts/
 │   ├── build-binaries.sh # Orchestrate per-repo builds (make build)
 │   ├── build-overlay.sh  # Assemble overlay from built binaries
-│   ├── build-iso.sh      # Run mkimage for x86_64
-│   ├── build-rpi.sh      # Run mkimage for aarch64
+│   ├── build-image.sh    # Run mkimage for any profile (--profile x86_64|aarch64)
 │   └── sign.sh           # Checksums and GPG signatures
 ├── docker/
 │   ├── Dockerfile.build  # Multi-stage Docker build environment

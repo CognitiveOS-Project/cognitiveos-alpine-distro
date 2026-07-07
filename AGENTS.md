@@ -15,11 +15,9 @@ via its own `Makefile` and `scripts/build.sh`. The distro's `build-binaries.sh` 
 by invoking each repo's `make build` and collecting the resulting binaries from `build/bin/`.
 
 ### Workflow Notes
-- `libgpiod-tools` does not exist in Alpine edge — removed from all package lists.
-- `build-binaries.sh`, `build-image.sh`, `build-overlay.sh`, `publish-cgp.sh`,
-  `sign.sh`, `build-distro-tarball.sh` all use `#!/bin/bash` (not `#!/bin/sh`).
-- `nproc` quoting: use `$(nproc)`, not `"$(nproc)"` or `nproc` alone (SC2046).
 - Inference builds: `CGO_ENABLED=0` in CI (mock backend); CGo with llama.cpp for production.
+- `jq` is required by `publish-cgp.sh`.
+- `build-iso.sh` and `build-rpi.sh` removed — both superseded by `build-image.sh --profile`.
 
 ## Build Output
 
