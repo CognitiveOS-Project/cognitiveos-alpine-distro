@@ -9,8 +9,6 @@ OVERLAY_DIR := ./overlay
 BUILD_DIR := ./build
 SCRIPTS_DIR := ./scripts
 
-GO := /tmp/go/bin/go
-
 .PHONY: all iso rpi clean distclean docker shell checksums sign
 .PHONY: install-local distro-tarball publish-cgp docker-release release deps
 
@@ -95,5 +93,5 @@ release: distro-tarball docker-release
 deps:
 	@echo "==> Checking dependencies..."
 	@command -v docker >/dev/null 2>&1 || echo "  WARNING: docker not found"
-	@command -v $(GO) >/dev/null 2>&1 || echo "  WARNING: $(GO) not found (run: scripts/build-binaries.sh)"
+	@command -v make >/dev/null 2>&1 || echo "  WARNING: make not found"
 	@echo "  done."

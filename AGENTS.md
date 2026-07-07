@@ -9,28 +9,17 @@ Build scripts and configurations for producing a bootable CognitiveOS image base
   resulting in remotes pointing to wrong repositories.
 - All repos use SSH (`git@github.com:CognitiveOS-Project/*`), never HTTPS.
 
-### Inference Bridge Fix (root cause of Release failures)
-`CognitiveOS-Project/inference/internal/llm/bridge.go` line 6:
-- `-llama` → `-lllama` (cmake target `llama` → `libllama.a`, missing `l`)
-- Missing `-L.../build/src` (modern llama.cpp puts static archives in `build/src/`)
-- Missing `-I.../ggml/include` (llama.h includes ggml headers from there)
-- Inference has no `.gitmodules` file — `vendor/llama.cpp` is NOT a git submodule.
-  Must clone llama.cpp explicitly in `build-binaries.sh`.
-- CI needs `CGO_ENABLED=0` to build with mock backend (Ubuntu defaults to `CGO_ENABLED=1`).
-- `golangci-lint-action` v6 uses deprecated Node 20 → bump to v9.
-
-### Remaining Workarounds in `build-binaries.sh`
-bridge.go now has correct `-lllama`, `-Lbuild/src`, and `-Iggml/include` flags.
-Remaining workaround: `CGO_LDFLAGS` with ggml library discovery (`find build -name "libggml*.a"` → `-lggml*` flags).
-bridge.go links only `-lllama`; ggml sub-libraries must be discovered dynamically since their
-exact names vary by build config. If llama.cpp cmake ever produces a monolithic `libllama.a`
-that bundles ggml, this loop can be removed too.
+### Per-Repo Build Architecture
+Each Go repo (cpm, cognitiveosd, cli, inference, core-mcp-bridges) builds independently
+via its own `Makefile` and `scripts/build.sh`. The distro's `build-binaries.sh` orchestrates
+by invoking each repo's `make build` and collecting the resulting binaries from `build/bin/`.
 
 ### Workflow Notes
 - `libgpiod-tools` does not exist in Alpine edge — removed from all package lists.
 - `build-binaries.sh`, `build-image.sh`, `build-overlay.sh`, `publish-cgp.sh`,
   `sign.sh`, `build-distro-tarball.sh` all use `#!/bin/bash` (not `#!/bin/sh`).
 - `nproc` quoting: use `$(nproc)`, not `"$(nproc)"` or `nproc` alone (SC2046).
+- Inference builds: `CGO_ENABLED=0` in CI (mock backend); CGo with llama.cpp for production.
 
 ## Build Output
 
@@ -66,7 +55,7 @@ that bundles ggml, this loop can be removed too.
 |--------|-------------|
 | `iso` | Build x86_64 ISO (requires Alpine + mkimage) |
 | `rpi` | Build aarch64 RPi image |
-| `install-local` | Compile Go binaries + assemble overlay |
+| `install-local` | Orchestrate per-repo builds (make build) + assemble overlay |
 | `distro-tarball` | Build portable distro tarball (overlay + binaries) |
 | `publish-cgp` | Publish .cgp packages to registry (needs REGISTRY_TOKEN) |
 | `docker-release` | Build Docker release image from Dockerfile.release |
@@ -85,7 +74,7 @@ that bundles ggml, this loop can be removed too.
 │       └── cognitiveos/      # config.toml, registries.toml
 ├── packages.*                # Alpine package lists per architecture
 ├── scripts/
-│   ├── build-binaries.sh     # Compile all Go projects
+│   ├── build-binaries.sh     # Orchestrate per-repo builds (make build)
 │   ├── build-overlay.sh      # Assemble overlay from built binaries
 │   ├── build-image.sh        # Run mkimage with Docker fallback (--profile x86_64|aarch64)
 │   ├── build-distro-tarball.sh # Portable distro archive

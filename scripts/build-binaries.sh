@@ -1,99 +1,55 @@
 #!/bin/bash
+# Orchestrate per-repo builds — each repo owns its own build process
 set -euo pipefail
-
-# ── Bootstrap: install build dependencies on Alpine Linux ──
-if [ -f /etc/alpine-release ]; then
-  echo "Alpine Linux detected — installing build dependencies..."
-  apk add --no-cache cmake build-base gcc g++ musl-dev git ca-certificates 2>&1
-  echo "  done."
-fi
 
 BUILD_DIR="$(realpath "$(dirname "$0")/..")/build"
 BIN_DIR="${BUILD_DIR}/bin"
-SRC_DIR="$(realpath "$(dirname "$0")/..")"
-
-GO="$(command -v go 2>/dev/null || echo "/tmp/go/bin/go")"
-
-REPOS="cpm cognitiveosd cli inference core-mcp-bridges"
-
 mkdir -p "${BIN_DIR}"
 
+# Clone or update repos
+REPOS="cpm cognitiveosd cli inference core-mcp-bridges"
 for repo in ${REPOS}; do
-    SRC_PATH="${SRC_DIR}/../${repo}"
+    SRC_PATH="$(realpath "$(dirname "$0")/..")/../${repo}"
     if [ ! -d "${SRC_PATH}" ]; then
         echo "Cloning ${repo} from GitHub..."
         git clone --depth=1 "https://github.com/CognitiveOS-Project/${repo}.git" "${SRC_PATH}"
     fi
 done
 
-echo "Building cpm..."
-cd "${SRC_DIR}/../cpm"
-CGO_ENABLED=0 GOOS=linux ${GO} build -ldflags="-s -w" -o "${BIN_DIR}/cpm" ./cmd/cpm
-echo "  -> cpm built"
-
-echo "Building cognitiveosd..."
-cd "${SRC_DIR}/../cognitiveosd"
-CGO_ENABLED=0 GOOS=linux ${GO} build -ldflags="-s -w" -o "${BIN_DIR}/cognitiveosd" ./cmd/cognitiveosd
-echo "  -> cognitiveosd built"
-
-echo "Building cli..."
-cd "${SRC_DIR}/../cli"
-CGO_ENABLED=0 GOOS=linux ${GO} build -ldflags="-s -w" -o "${BIN_DIR}/cognitiveos-cli" ./cmd/cognitiveos-cli
-echo "  -> cognitiveos-cli built"
-
-echo "Building llama.cpp (vendored in inference)..."
-LLAMA_CPP_DIR="${SRC_DIR}/../inference/vendor/llama.cpp"
-if [ ! -f "${LLAMA_CPP_DIR}/CMakeLists.txt" ]; then
-    echo "  Cloning llama.cpp into vendor/llama.cpp..."
-    mkdir -p "$(dirname "${LLAMA_CPP_DIR}")"
-    git clone --depth=1 https://github.com/ggerganov/llama.cpp.git "${LLAMA_CPP_DIR}"
-fi
-cd "${LLAMA_CPP_DIR}"
-cmake -B build -DLLAMA_NATIVE=0 \
-  -DBUILD_SHARED_LIBS=0 -DLLAMA_BUILD_TESTS=0 \
-  -DLLAMA_BUILD_EXAMPLES=0 -DLLAMA_BUILD_SERVER=0 \
-  -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="${LLAMA_CPP_DIR}/build"
-cmake --build build --config Release --target llama -j"$(nproc)"
-echo "  -> llama.cpp built"
-LLAMA_LIB=$(find build -name "libllama.a" -type f)
-if [ -z "${LLAMA_LIB}" ]; then
-    echo "  ERROR: libllama.a not found in build/"
-    exit 1
-fi
-echo "  -> Found libraries: ${LLAMA_LIB}"
-
-LLAMA_CPP_INC="${LLAMA_CPP_DIR}/ggml/include"
-CGO_LLAMA_LDFLAGS=""
-while IFS= read -r lib; do
-    libname=$(basename "${lib}" .a | sed 's/^lib//')
-    CGO_LLAMA_LDFLAGS="${CGO_LLAMA_LDFLAGS} -l${libname}"
-  done <<EOF
-$(find build -name "libggml*.a" -type f)
-EOF
-CGO_LLAMA_LDFLAGS="${CGO_LLAMA_LDFLAGS} -lgomp"
-
-echo "Building inference (coginfer)..."
-cd "${SRC_DIR}/../inference"
-CGO_ENABLED=1 CGO_CFLAGS="-I${LLAMA_CPP_INC}" CGO_LDFLAGS="${CGO_LLAMA_LDFLAGS}" GOOS=linux ${GO} build -tags=cgo -ldflags="-s -w" -o "${BIN_DIR}/cognitiveos-inference" ./cmd/coginfer
-echo "  -> cognitiveos-inference built"
-
-echo "Building cograw..."
-cd "${SRC_DIR}/../inference"
-CGO_ENABLED=1 CGO_CFLAGS="-I${LLAMA_CPP_INC}" CGO_LDFLAGS="${CGO_LLAMA_LDFLAGS}" GOOS=linux ${GO} build -tags=cgo -ldflags="-s -w" -o "${BIN_DIR}/cograw" ./cmd/cograw
-echo "  -> cograw built"
-
-echo "Building core-mcp-bridges..."
-cd "${SRC_DIR}/../core-mcp-bridges"
-BRIDGE_BIN_DIR="${BIN_DIR}/bridges"
-mkdir -p "${BRIDGE_BIN_DIR}"
-for dir in */; do
-    bridge=$(basename "${dir}")
-    if [ -f "${dir}main.go" ] || [ -f "${dir}go.mod" ] || [ -f "${dir}Makefile" ]; then
-        echo "  Building bridge: ${bridge}..."
-        CGO_ENABLED=0 GOOS=linux ${GO} build -ldflags="-s -w" -o "${BRIDGE_BIN_DIR}/${bridge}" "./${dir}" || echo "  WARNING: bridge ${bridge} build failed, skipping"
+# Build each repo using its own Makefile (or scripts/build.sh)
+for repo in ${REPOS}; do
+    SRC_PATH="$(realpath "$(dirname "$0")/..")/../${repo}"
+    echo ""
+    echo "==> Building ${repo}..."
+    cd "${SRC_PATH}"
+    if [ -f Makefile ]; then
+        make build
+    elif [ -f scripts/build.sh ]; then
+        bash scripts/build.sh
+    else
+        echo "  ERROR: no Makefile or scripts/build.sh found in ${repo}"
+        exit 1
     fi
+    # Collect binaries
+    if [ -d build/bin ]; then
+        cp -a build/bin/* "${BIN_DIR}/" 2>/dev/null || true
+    fi
+    echo "  -> ${repo} binaries collected"
 done
-echo "  -> core-mcp-bridges built"
+
+# Special handling: inference CGo build (llama.cpp)
+# The inference Makefile handles this when vendor/llama.cpp exists,
+# but build-binaries.sh also clones it if missing
+INFERENCE_DIR="$(realpath "$(dirname "$0")/..")/../inference"
+LLAMA_CPP_DIR="${INFERENCE_DIR}/vendor/llama.cpp"
+if [ -f "${LLAMA_CPP_DIR}/CMakeLists.txt" ]; then
+    echo ""
+    echo "==> llama.cpp already vendored — inference built with CGo"
+else
+    echo ""
+    echo "==> Note: llama.cpp not vendored — inference built with CGO_ENABLED=0 (mock backend)"
+fi
 
 echo ""
-echo "All binaries built successfully in ${BIN_DIR}"
+echo "All binaries in ${BIN_DIR}:"
+ls -la "${BIN_DIR}/"

@@ -1,13 +1,13 @@
-# Stage 1: Build Go binaries
+# Stage 1: Build Go binaries from each repo's Makefile
 FROM golang:1.25-alpine AS builder
 
 ARG GIT_CLONE_PREFIX=git@github.com:
-RUN apk add --no-cache git ca-certificates cmake build-base gcc g++ openssh-client
+RUN apk add --no-cache git ca-certificates cmake build-base gcc g++ openssh-client make
 RUN mkdir -p /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts 2>/dev/null
 
 WORKDIR /src
 
-# Clone all repos (use GIT_CLONE_PREFIX build arg for CI token auth)
+# Clone all repos
 RUN for repo in cpm cognitiveosd cli inference core-mcp-bridges; do \
         git clone --depth=1 "${GIT_CLONE_PREFIX}CognitiveOS-Project/${repo}.git" "${repo}"; \
     done
@@ -25,47 +25,12 @@ RUN cd /src/inference && \
 
 RUN mkdir -p /out/bin/bridges
 
-# Build cpm
-RUN cd /src/cpm && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/bin/cpm ./cmd/cpm
-
-# Build cognitiveosd
-RUN cd /src/cognitiveosd && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/bin/cognitiveosd ./cmd/cognitiveosd
-
-# Build cli
-RUN cd /src/cli && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/bin/cognitiveos-cli ./cmd/cognitiveos-cli
-
-# Build inference (coginfer) — with CGo for llama.cpp
-RUN LLAMA_DIR=/src/inference/vendor/llama.cpp && \
-    LLAMA_INC="${LLAMA_DIR}/ggml/include" && \
-    CGO_LD="" && \
-    for lib in $(find "${LLAMA_DIR}/build" -name "libggml*.a" -type f); do \
-        libname=$(basename "${lib}" .a | sed 's/^lib//'); \
-        CGO_LD="${CGO_LD} -l${libname}"; \
-    done && \
-    CGO_LD="${CGO_LD} -lgomp" && \
-    cd /src/inference && \
-    CGO_ENABLED=1 CGO_CFLAGS="-I${LLAMA_INC}" CGO_LDFLAGS="${CGO_LD}" GOOS=linux go build -tags=cgo -ldflags="-s -w" -o /out/bin/cognitiveos-inference ./cmd/coginfer
-
-# Build cograw — with CGo for llama.cpp
-RUN LLAMA_DIR=/src/inference/vendor/llama.cpp && \
-    LLAMA_INC="${LLAMA_DIR}/ggml/include" && \
-    CGO_LD="" && \
-    for lib in $(find "${LLAMA_DIR}/build" -name "libggml*.a" -type f); do \
-        libname=$(basename "${lib}" .a | sed 's/^lib//'); \
-        CGO_LD="${CGO_LD} -l${libname}"; \
-    done && \
-    CGO_LD="${CGO_LD} -lgomp" && \
-    cd /src/inference && \
-    CGO_ENABLED=1 CGO_CFLAGS="-I${LLAMA_INC}" CGO_LDFLAGS="${CGO_LD}" GOOS=linux go build -tags=cgo -ldflags="-s -w" -o /out/bin/cograw ./cmd/cograw
-
-# Build core-mcp-bridges
-WORKDIR /src/core-mcp-bridges
-RUN for dir in */; do \
-        bridge=$(basename "${dir}"); \
-        if [ -f "${dir}/go.mod" ] || [ -f "${dir}/main.go" ]; then \
-            CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o "/out/bin/bridges/${bridge}" "./${dir}" || true; \
-        fi \
-    done
+# Build each repo using its Makefile
+RUN cd /src/cpm && make build && cp -a build/bin/* /out/bin/
+RUN cd /src/cognitiveosd && make build && cp -a build/bin/* /out/bin/
+RUN cd /src/cli && make build && cp -a build/bin/* /out/bin/
+RUN cd /src/inference && make build && cp -a build/bin/* /out/bin/
+RUN cd /src/core-mcp-bridges && make build && cp -a build/bin/* /out/bin/
 
 # Stage 2: Runtime base
 FROM alpine:edge
@@ -89,12 +54,9 @@ RUN apk add --no-cache \
     acpid
 
 COPY --from=builder /out/bin/ /usr/local/bin/
-
-# Overlay
 COPY overlay/ /
 
 RUN mkdir -p /cognitiveos/run /cognitiveos/patches /cognitiveos/data /cognitiveos/packages
-
 RUN chmod 755 /usr/local/bin/*
 
 ENTRYPOINT ["/sbin/init"]

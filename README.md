@@ -6,7 +6,7 @@ CognitiveOS distribution image builder — produces bootable Alpine Linux based 
 
 - Alpine Linux / Linux host with `apk` and `alpine-conf` (for `mkimage`)
 - Docker (for cross-architecture builds)
-- Go 1.23+ (at `/tmp/go/bin/go`)
+- Go 1.24+
 - Git
 
 ## Quick start
@@ -32,24 +32,32 @@ make rpi
 │       └── cognitiveos/  # Config files (config.toml, registries.toml)
 ├── packages.*            # Alpine package lists per architecture
 ├── scripts/
-│   ├── build-binaries.sh # Compile all Go projects
+│   ├── build-binaries.sh # Orchestrate per-repo builds (make build)
 │   ├── build-overlay.sh  # Assemble overlay from built binaries
 │   ├── build-iso.sh      # Run mkimage for x86_64
 │   ├── build-rpi.sh      # Run mkimage for aarch64
 │   └── sign.sh           # Checksums and GPG signatures
 ├── docker/
-│   └── Dockerfile.build  # Multi-stage Docker build environment
+│   ├── Dockerfile.build  # Multi-stage Docker build environment
+│   └── Dockerfile.release # Minimal runtime image
 └── Makefile              # Top-level automation
 ```
 
 ## Development mode
 
 ```sh
-# Build all Go binaries from local repos and prepare overlay
+# Build all Go binaries from sibling repos and prepare overlay
 make install-local
 ```
 
 Output from `make iso` / `make rpi` goes to `output/`. Run `make clean` to remove build artifacts.
+
+Each Go component builds independently via its own Makefile:
+- `cpm` — `make build` to `build/bin/cpm`
+- `cognitiveosd` — `make build` to `build/bin/cognitiveosd`
+- `cli` — `make build` to `build/bin/cognitiveos-cli`
+- `inference` — `make build` to `build/bin/cognitiveos-inference` and `build/bin/cograw`
+- `core-mcp-bridges` — `make build` to `build/bin/` (audio, display, gpio, network, serial, package)
 
 ## Related
 
@@ -64,11 +72,10 @@ Output from `make iso` / `make rpi` goes to `output/`. Run `make clean` to remov
 
 ## Contributing
 
-1. Branch from `development`, not `main`
-2. Use topic branches: `feature/<name>`, `fix/<name>`, `bugfix/<name>`
-3. Open a PR to `development` with a clear title and description
-4. Merge via squash after review
-5. Changes flow to `main` via a release PR
+1. Branch from `main`
+2. Use topic branches: `feature/<name>`, `fix/<name>`
+3. Open a PR to `main` with a clear title and description
+4. Merge after review
 
 See the [SDLC repo](https://github.com/CognitiveOS-Project/sdlc) for the full contribution guide, code review standards, and testing strategy.
 

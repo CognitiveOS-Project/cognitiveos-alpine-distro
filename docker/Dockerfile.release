@@ -1,8 +1,8 @@
-# Stage 1: Build Go binaries
+# Stage 1: Build Go binaries from each repo's Makefile
 FROM golang:1.25-alpine AS builder
 
 ARG GIT_CLONE_PREFIX=git@github.com:
-RUN apk add --no-cache git ca-certificates openssh-client
+RUN apk add --no-cache git ca-certificates openssh-client make
 RUN mkdir -p /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts 2>/dev/null
 
 WORKDIR /src
@@ -13,18 +13,11 @@ RUN for repo in cpm cognitiveosd cli inference core-mcp-bridges; do \
 
 RUN mkdir -p /out/bin/bridges
 
-RUN cd /src/cpm && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/bin/cpm ./cmd/cpm
-RUN cd /src/cognitiveosd && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/bin/cognitiveosd ./cmd/cognitiveosd
-RUN cd /src/cli && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/bin/cognitiveos-cli ./cmd/cognitiveos-cli
-RUN cd /src/inference && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/bin/cognitiveos-inference ./cmd/coginfer
-
-WORKDIR /src/core-mcp-bridges
-RUN for dir in */; do \
-        bridge=$(basename "${dir}"); \
-        if [ -f "${dir}/go.mod" ] || [ -f "${dir}/main.go" ]; then \
-            CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o "/out/bin/bridges/${bridge}" "./${dir}" || true; \
-        fi \
-    done
+RUN cd /src/cpm && make build && cp -a build/bin/* /out/bin/
+RUN cd /src/cognitiveosd && make build && cp -a build/bin/* /out/bin/
+RUN cd /src/cli && make build && cp -a build/bin/* /out/bin/
+RUN cd /src/inference && make build && cp -a build/bin/* /out/bin/
+RUN cd /src/core-mcp-bridges && make build && cp -a build/bin/* /out/bin/
 
 # Stage 2: Minimal runtime image
 FROM alpine:edge

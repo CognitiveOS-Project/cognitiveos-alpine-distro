@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [development, main]
+    branches: [main]
   pull_request:
-    branches: [development]
+    branches: [main]
 
 jobs:
   shellcheck:
@@ -24,30 +24,15 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
-      - name: Verify Go compilation (cpm)
-        working-directory: /tmp
+      - name: Verify each repo builds via its own Makefile
         run: |
-          git clone --depth=1 https://github.com/CognitiveOS-Project/cpm.git
-          cd cpm
-          CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /dev/null ./cmd/cpm
-      - name: Verify Go compilation (cognitiveosd)
-        working-directory: /tmp
-        run: |
-          git clone --depth=1 https://github.com/CognitiveOS-Project/cognitiveosd.git
-          cd cognitiveosd
-          CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /dev/null ./cmd/cognitiveosd
-      - name: Verify Go compilation (cli)
-        working-directory: /tmp
-        run: |
-          git clone --depth=1 https://github.com/CognitiveOS-Project/cli.git
-          cd cli
-          CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /dev/null ./cmd/cognitiveos-cli
-      - name: Verify Go compilation (inference)
-        working-directory: /tmp
-        run: |
-          git clone --depth=1 https://github.com/CognitiveOS-Project/inference.git
-          cd inference
-          CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /dev/null ./cmd/coginfer
+          for repo in cpm cognitiveosd cli inference core-mcp-bridges; do
+            echo "=== $repo ==="
+            git clone --depth=1 "https://github.com/CognitiveOS-Project/${repo}.git" "/tmp/${repo}"
+            cd "/tmp/${repo}"
+            make build
+            cd /tmp
+          done
 
   script-check:
     runs-on: ubuntu-latest
