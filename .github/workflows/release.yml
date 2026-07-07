@@ -23,10 +23,7 @@ jobs:
           go-version: "1.24"
 
       - name: Build binaries and overlay
-        run: |
-          chmod +x scripts/*.sh
-          bash scripts/build-binaries.sh
-          bash scripts/build-overlay.sh
+        run: make install-local
 
       - name: Build distro tarball
         run: |

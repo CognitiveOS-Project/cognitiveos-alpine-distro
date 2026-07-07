@@ -63,7 +63,9 @@ publish-cgp:
 	done
 
 docker-release:
-	docker build -f docker/Dockerfile.release -t cognitiveos:$(VERSION) .
+	docker build -f docker/Dockerfile.release \
+		-t cognitiveos:$$(git describe --tags --abbrev=0 2>/dev/null || echo "dev") \
+		-t cognitiveos:latest .
 
 release: distro-tarball docker-release
 	ls -lh $(OUTPUT_DIR)/

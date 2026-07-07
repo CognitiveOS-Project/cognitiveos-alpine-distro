@@ -1,0 +1,14 @@
+.git/
+.gitignore
+.DS_Store
+AGENTS.md
+README.md
+LICENSE
+output/
+build/
+cache/
+work/
+*.iso
+*.img
+*.tar.gz
+docker/

@@ -46,4 +46,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            GIT_CLONE_PREFIX=https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/
+            GIT_CLONE_PREFIX=https://github.com/

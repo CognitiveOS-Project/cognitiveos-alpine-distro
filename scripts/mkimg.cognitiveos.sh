@@ -1,4 +1,5 @@
 # shellcheck shell=sh
+# shellcheck disable=SC2034,SC2153
 # This file is sourced by aports/scripts/mkimage.sh — not executed directly.
 
 profile_cognitiveos() {

@@ -1,10 +1,7 @@
 FROM golang:1.25-alpine AS builder
 
-ARG GIT_CLONE_PREFIX=git@github.com:
-RUN apk add --no-cache git ca-certificates cmake build-base gcc g++ openssh-client make
-RUN mkdir -p /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts 2>/dev/null
-
-WORKDIR /src
+ARG GIT_CLONE_PREFIX=https://github.com/
+RUN apk add --no-cache git ca-certificates cmake build-base openssh-client make
 
 RUN for repo in cpm cognitiveosd cli inference core-mcp-bridges; do \
         git clone --depth=1 "${GIT_CLONE_PREFIX}CognitiveOS-Project/${repo}.git" "${repo}"; \
@@ -12,11 +9,10 @@ RUN for repo in cpm cognitiveosd cli inference core-mcp-bridges; do \
     mkdir -p /src/inference/vendor && \
     git clone --depth=1 https://github.com/ggerganov/llama.cpp.git /src/inference/vendor/llama.cpp && \
     cd /src/inference/vendor/llama.cpp && \
-    cmake -B build -DLLAMA_NATIVE=0 \
-      -DBUILD_SHARED_LIBS=0 -DLLAMA_BUILD_TESTS=0 \
-      -DLLAMA_BUILD_EXAMPLES=0 -DLLAMA_BUILD_SERVER=0 \
+    cmake -B build -DLLAMA_NATIVE=0 -DBUILD_SHARED_LIBS=0 \
+      -DLLAMA_BUILD_TESTS=0 -DLLAMA_BUILD_EXAMPLES=0 -DLLAMA_BUILD_SERVER=0 \
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$PWD/build" && \
-    cmake --build build --config Release --target llama -j$(nproc) && \
+    cmake --build build --target llama -j"$(nproc)" && \
     mkdir -p /out/bin/bridges && \
     cd /src/cpm && make build && cp -a build/bin/* /out/bin/ && \
     cd /src/cognitiveosd && make build && cp -a build/bin/* /out/bin/ && \
