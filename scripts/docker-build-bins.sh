@@ -33,8 +33,7 @@ for repo in $REPOS; do
     echo "==> Building $repo..."
     cd "/src/$repo"
     if [ "$repo" = "inference" ] && [ "$MODE" = "release" ]; then
-        CGO_ENABLED=0 go build -ldflags="-s -w" -o build/bin/cognitiveos-inference ./cmd/coginfer
-        CGO_ENABLED=0 go build -ldflags="-s -w" -o build/bin/cograw ./cmd/cograw
+        make build-mock
     else
         make build
     fi
