@@ -95,7 +95,7 @@ verify-repos:
 			mkdir -p "/tmp/inference/vendor"; \
 			git clone --depth=1 https://github.com/ggerganov/llama.cpp.git "/tmp/inference/vendor/llama.cpp"; \
 		fi; \
-		make -C "/tmp/$$repo" build; \
+		CGO_ENABLED=0 make -C "/tmp/$$repo" build; \
 	done
 
 release-assets: install-local
