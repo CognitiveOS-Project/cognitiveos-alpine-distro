@@ -77,15 +77,17 @@ run_mkimage() {
             echo "  → ${newname}"
         fi
     done
-    echo ""; echo "Build complete. Output in ${OUTPUT_DIR}:"
-    ls -lh "$OUTPUT_DIR/" | grep -v SHA256
+	echo ""; echo "Build complete. Output in ${OUTPUT_DIR}:"
+	find "$OUTPUT_DIR" -maxdepth 1 -type f ! -name "SHA256SUMS" -exec ls -lh {} +
 }
+
 
 if command -v apk >/dev/null 2>&1 && command -v git >/dev/null 2>&1; then
     echo "  -> Alpine + git found, building natively"
     [ "$(id -u)" -eq 0 ] && SUDO="" || SUDO="sudo"
-    $SUDO apk add --no-cache $MKIMAGE_DEPS
+    $SUDO apk add --no-cache "$MKIMAGE_DEPS"
     $SUDO abuild-keygen -a -n
+
 
     if [ ! -d "$APORTS_DIR" ]; then
         git clone --depth=1 "$APORTS_GIT" "$APORTS_DIR"
