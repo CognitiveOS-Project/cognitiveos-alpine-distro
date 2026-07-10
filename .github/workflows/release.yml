@@ -10,12 +10,33 @@ on:
       - "Release gateway-x86_64"
       - "Release micro-armv7"
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 0.4.0)'
+        required: true
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
+  trigger-variants:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trigger variant workflows
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for wf in "Release standard-x86_64" "Release titan-aarch64" "Release edge-aarch64" "Release edge-armv7" "Release gateway-x86_64" "Release micro-armv7"; do
+            echo "Triggering $wf..."
+            gh workflow run "$wf" -f version=${{ github.event.inputs.version }}
+          done
+
   release:
+    if: github.event_name == 'workflow_run'
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success'
     steps:
