@@ -30,7 +30,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for wf in "Release standard-x86_64" "Release titan-aarch64" "Release edge-aarch64" "Release edge-armv7" "Release gateway-x86_64" "Release micro-armv7"; do
+          for wf in "release-standard-x86_64.yml" "release-titan-aarch64.yml" "release-edge-aarch64.yml" "release-edge-armv7.yml" "release-gateway-x86_64.yml" "release-micro-armv7.yml"; do
             echo "Triggering $wf..."
             gh workflow run "$wf" -f version=${{ github.event.inputs.version }}
           done
@@ -82,8 +82,8 @@ jobs:
             - `SHA256SUMS` — integrity checksums
 
             ### Docker Images
-            Published to `ghcr.io/CognitiveOS-Project/cognitiveos-distro:VERSION-CLASS-ARCH`
-            Example: `ghcr.io/CognitiveOS-Project/cognitiveos-distro:${{ github.event.workflow_run.head_branch }}-standard-x86_64`
+            Published to `ghcr.io/cognitiveos-project/cognitiveos:VERSION-CLASS-ARCH`
+            Example: `ghcr.io/cognitiveos-project/cognitiveos:${{ github.event.workflow_run.head_branch }}-standard-x86_64`
 
             ### Registry Packages
             Core components published as .cgp packages to the official CognitiveOS registry.
