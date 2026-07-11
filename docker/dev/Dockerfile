@@ -1,33 +1,20 @@
 ARG CGO_ENABLED=0
 FROM golang:1.25-alpine AS builder
-
 ARG CGO_ENABLED
 ENV CGO_ENABLED=${CGO_ENABLED}
-
-RUN sed -i 's/dl-cdn.alpinelinux.org/dl-cdn.alpinelinux.org/g' /etc/apk/repositories && \
-    # This command uncommented the community repository
-    sed -i 's/#http/http/g' /etc/apk/repositories && \
-    apk update
+RUN sed -i 's/#http/http/g' /etc/apk/repositories && apk update
 RUN apk add --no-cache git ca-certificates cmake build-base make
-
 WORKDIR /src
 COPY . .
-
 RUN make docker.build
 
 FROM alpine:edge
-
-RUN sed -i 's/dl-cdn.alpinelinux.org/dl-cdn.alpinelinux.org/g' /etc/apk/repositories && \
-    # This command uncommented the community repository
-    sed -i 's/#http/http/g' /etc/apk/repositories && \
-    apk update
-
+RUN sed -i 's/#http/http/g' /etc/apk/repositories && apk update
 RUN apk update && apk add --no-cache \
     alpine-base busybox openrc linux-lts \
     alsa-utils alsa-lib \
     iw wpa_supplicant dhcpcd \
-    libgpiod gpiod-tools kbd mpv fbv fbi \
+    libgpiod kbd mpv \
     dosfstools e2fsprogs squashfs-tools acpid
-
 COPY --from=builder /out/ /
 ENTRYPOINT ["/usr/local/bin/cognitiveos-cli"]

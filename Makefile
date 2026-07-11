@@ -42,7 +42,7 @@ docker:
 # Build a dev runtime image (CGO_ENABLED=0) for CI verification
 docker.dev:
 	docker build --build-arg CGO_ENABLED=0 \
-		-f docker/Dockerfile.release \
+		-f docker/dev/Dockerfile \
 		-t cognitiveos-dev .
 
 # --- Per-architecture release targets ---
@@ -62,7 +62,7 @@ docker-release-arch:
 	CLASS=$(CLASS); \
 	docker buildx build --platform linux/$(ARCH) \
 		--build-arg CGO_ENABLED=1 \
-		-f docker/Dockerfile.release \
+		-f docker/release/$(CLASS)-$(ARCH)/Dockerfile \
 		-t cognitiveos:$${VERSION}-$(CLASS)-$(ARCH) \
 		-t ghcr.io/cognitiveos-project/cognitiveos:$${VERSION}-$(CLASS)-$(ARCH) \
 		--load .

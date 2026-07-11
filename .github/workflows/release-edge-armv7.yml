@@ -22,10 +22,14 @@ jobs:
         with:
           go-version: "1.24"
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+       - name: Set up QEMU
+         uses: docker/setup-qemu-action@v3
+ 
+       - name: Set up Docker Buildx
+         uses: docker/setup-buildx-action@v3
+ 
+       - name: Build release assets
 
-      - name: Build release assets
         env:
           CGO_ENABLED: "1"
         run: make release-variant ARCH=armv7 CLASS=edge
@@ -79,8 +83,8 @@ jobs:
             - `SHA256SUMS` — integrity checksums
 
             ### Docker Image
-            Published to `ghcr.io/CognitiveOS-Project/cognitiveos-distro:${{ github.ref_name }}-edge-armv7`
+            Published to `ghcr.io/cognitiveos-project/cognitiveos:${{ github.ref_name }}-edge-armv7`
             ```
-            docker pull ghcr.io/CognitiveOS-Project/cognitiveos-distro:${{ github.ref_name }}-edge-armv7
+            docker pull ghcr.io/cognitiveos-project/cognitiveos:${{ github.ref_name }}-edge-armv7
             ```
           files: output/*
