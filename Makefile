@@ -94,10 +94,7 @@ checksums:
 sign: checksums
 
 install-local: deps
-	@for repo in cli cognitiveosd core-mcp-bridges inference cpm; do \
-		echo "  Building $$repo..."; \
-		make -C ../$$repo build; \
-	done
+	$(SHELL) $(SCRIPTS_DIR)/build-binaries.sh
 	$(SHELL) $(SCRIPTS_DIR)/build-overlay.sh
 
 distro-tarball: install-local
