@@ -6,6 +6,10 @@ dosfstools
 e2fsprogs
 squashfs-tools
 acpid
+iw
+wpa_supplicant
+dhcpcd
+libgpiod
 iputils
 curl
 nmap

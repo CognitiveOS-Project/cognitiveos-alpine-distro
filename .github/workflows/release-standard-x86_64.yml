@@ -36,6 +36,12 @@ jobs:
         env:
           CGO_ENABLED: "1"
         run: make docker-release-arch ARCH=x86_64 CLASS=standard
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push Docker image
         run: make docker-push-arch ARCH=x86_64 CLASS=standard
       - name: Upload artifacts

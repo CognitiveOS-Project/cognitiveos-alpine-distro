@@ -9,16 +9,8 @@ COPY . .
 RUN make docker.build
 
 FROM alpine:edge
-RUN echo "https://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories && \
-    echo "https://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
-    apk update
-RUN apk add --no-cache \
-    alpine-base busybox openrc linux-rpi \
-    raspberrypi-bootloader raspberrypi-firmware \
-    alsa-utils alsa-lib \
-    iw wpa_supplicant dhcpcd \
-    libgpiod kbd mpv \
-    dosfstools e2fsprogs squashfs-tools acpid \
-    fbv fbi gpiod-tools
+COPY scripts/bootstrap-docker-release.sh /usr/local/bin/
+COPY packages.titan-aarch64 /tmp/packages
+RUN bootstrap-docker-release.sh /tmp/packages
 COPY --from=builder /out/ /
 ENTRYPOINT ["/usr/local/bin/cognitiveos-cli"]

@@ -5,3 +5,4 @@ linux-rpi
 raspberrypi-bootloader
 dosfstools
 e2fsprogs
+dhcpcd

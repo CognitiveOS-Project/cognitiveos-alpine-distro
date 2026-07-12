@@ -8,3 +8,9 @@ dosfstools
 e2fsprogs
 squashfs-tools
 acpid
+alsa-utils
+alsa-lib
+iw
+wpa_supplicant
+dhcpcd
+libgpiod
