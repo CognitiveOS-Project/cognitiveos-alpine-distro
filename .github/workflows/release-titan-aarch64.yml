@@ -70,7 +70,8 @@ jobs:
       - name: Append to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: CognitiveOS ${{ github.ref_name }}
+          tag_name: ${{ github.event.inputs.version && format('v{0}', github.event.inputs.version) || github.ref_name }}
+          name: CognitiveOS ${{ github.event.inputs.version && format('v{0}', github.event.inputs.version) || github.ref_name }}
           body: |
             ## CognitiveOS ${{ github.ref_name }}
             ### aarch64 Artifacts

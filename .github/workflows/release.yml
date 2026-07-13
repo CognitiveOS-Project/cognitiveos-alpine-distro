@@ -29,9 +29,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          TAG="v${{ github.event.inputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag $TAG || true
+          git push origin $TAG || true
           for wf in "Release standard-x86_64" "Release titan-aarch64" "Release edge-aarch64" "Release edge-armv7" "Release gateway-x86_64" "Release micro-armv7"; do
-            echo "Triggering $wf..."
-            gh workflow run "$wf" -f version=${{ github.event.inputs.version }}
+            echo "Triggering $wf on $TAG..."
+            gh workflow run "$wf" -f version=${{ github.event.inputs.version }} --ref $TAG
           done
 
   release:
@@ -70,6 +75,7 @@ jobs:
       - name: Finalize GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event.workflow_run.head_branch }}
           name: CognitiveOS ${{ github.event.workflow_run.head_branch }}
           body: |
             ## CognitiveOS ${{ github.event.workflow_run.head_branch }}
