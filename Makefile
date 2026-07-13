@@ -60,11 +60,17 @@ docker-release-arch:
 	@VERSION=$$(cat VERSION 2>/dev/null || echo "dev"); \
 	ARCH=$(ARCH); \
 	CLASS=$(CLASS); \
-	docker buildx build --platform linux/$(ARCH) \
+	case "$$ARCH" in \
+		x86_64) PLATFORM=linux/amd64 ;; \
+		aarch64) PLATFORM=linux/arm64 ;; \
+		armv7) PLATFORM=linux/arm/v7 ;; \
+		*) PLATFORM=linux/$$ARCH ;; \
+	esac; \
+	docker buildx build --platform $$PLATFORM \
 		--build-arg CGO_ENABLED=1 \
-		-f docker/release/$(CLASS)-$(ARCH)/Dockerfile \
-		-t cognitiveos:$${VERSION}-$(CLASS)-$(ARCH) \
-		-t ghcr.io/cognitiveos-project/cognitiveos:$${VERSION}-$(CLASS)-$(ARCH) \
+		-f docker/release/$$(CLASS)-$$(ARCH)/Dockerfile \
+		-t cognitiveos:$${VERSION}-$$(CLASS)-$$(ARCH) \
+		-t ghcr.io/cognitiveos-project/cognitiveos:$${VERSION}-$$(CLASS)-$$(ARCH) \
 		--load .
 
 docker-push-arch:
