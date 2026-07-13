@@ -19,12 +19,13 @@ fi
 
 # Scan for .cgp files and install build deps
 found=0
-for patch in $(find "$OVERLAY_DIR" -name "*.cgp"); do
+find "$OVERLAY_DIR" -name "*.cgp" | while read -r patch; do
     found=1
     echo "  -> Registering build dependencies for $patch..."
     "$CPM_BIN" register-dependencies "$patch"
     "$CPM_BIN" install-dependencies --stage build
 done
+
 
 if [ "$found" -eq 0 ]; then
     echo "  -> No .cgp patches found in overlay, skipping build dependencies."
