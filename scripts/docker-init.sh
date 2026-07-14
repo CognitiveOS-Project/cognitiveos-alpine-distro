@@ -7,7 +7,13 @@ log() {
 }
 
 log "Starting CognitiveOS entrypoint..."
-
+ 
+# 0. Install boot-stage system dependencies
+if [ -x /usr/local/bin/cpm ]; then
+    log "Processing boot-stage system dependencies..."
+    /usr/local/bin/cpm install-dependencies --stage boot || log "WARN: boot-dependencies installation encountered issues"
+fi
+ 
 # Create runtime directories
 mkdir -p /cognitiveos/run /cognitiveos/logs
 log "Created runtime directories"
