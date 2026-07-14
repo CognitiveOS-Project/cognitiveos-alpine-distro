@@ -1,6 +1,6 @@
 {
-  "image_version": "0.1.0",
-  "build_date": "2026-07-10T20:58:34Z",
+  "image_version": "v0.4.2",
+  "build_date": "2026-07-14T02:44:28Z",
   "alpine_version": "edge",
   "cognitiveos_components": {}
 }

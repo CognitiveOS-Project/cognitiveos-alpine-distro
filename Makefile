@@ -33,7 +33,8 @@ distclean: clean
 docker.build:
 	$(SHELL) $(SCRIPTS_DIR)/build-binaries.sh
 	$(SHELL) $(SCRIPTS_DIR)/build-overlay.sh
-	mkdir -p /out 2>/dev/null && cp -a $(OVERLAY_DIR)/. /out/ 2>/dev/null; true
+	mkdir -p $(BUILD_DIR)/out
+	cp -a $(OVERLAY_DIR)/. $(BUILD_DIR)/out/
 
 # Build the builder image (calls docker.build inside the container)
 docker:
