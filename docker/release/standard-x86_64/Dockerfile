@@ -1,5 +1,5 @@
 ARG CGO_ENABLED=0
-FROM golang:1.25-alpine AS builder
+FROM golang:1.26-alpine AS builder
 ARG CGO_ENABLED
 ENV CGO_ENABLED=${CGO_ENABLED}
 RUN sed -i 's/#http/http/g' /etc/apk/repositories && apk update
