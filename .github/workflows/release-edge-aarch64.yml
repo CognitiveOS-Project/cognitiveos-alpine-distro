@@ -72,8 +72,14 @@ jobs:
           name: distro-edge-aarch64
           path: output/
       - name: Generate checksums
-        working-directory: output
-        run: sha256sum -- * > SHA256SUMS
+        run: |
+          mkdir -p output
+          cd output
+          if ls * >/dev/null 2>&1; then
+            sha256sum -- * > SHA256SUMS
+          else
+            touch SHA256SUMS
+          fi
       - name: Append to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
