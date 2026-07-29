@@ -63,12 +63,19 @@ jobs:
           echo "Timed out waiting for all variants"
           exit 1
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: distro-*
-          path: output/
-          merge-multiple: true
+      - name: Download all variant artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p output
+          TAG="${{ github.event.workflow_run.head_branch }}"
+          RUN_IDS=$(gh api "repos/${{ github.repository }}/actions/runs?branch=${TAG}&status=success" \
+            --jq '.workflow_runs[].id')
+          for run_id in $RUN_IDS; do
+            echo "Downloading artifacts from run $run_id..."
+            gh run download "$run_id" -D output/ -R "${{ github.repository }}" || true
+          done
+          ls -lh output/
 
       - name: Generate checksums
         run: |
