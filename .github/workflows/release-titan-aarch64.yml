@@ -46,6 +46,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push Docker image
+        env:
+          VERSION: ${{ github.event.inputs.version && format('v{0}', github.event.inputs.version) || github.ref_name }}
         run: make docker-push-arch ARCH=aarch64 CLASS=titan
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
