@@ -75,14 +75,18 @@ jobs:
             echo "Downloading artifacts from run $run_id..."
             gh run download "$run_id" -D output/ -R "${{ github.repository }}" || true
           done
+          # Flatten subdirectories created by gh run download
+          find output -type f -exec mv {} output/ \; 2>/dev/null || true
+          find output -mindepth 1 -type d -exec rm -rf {} + 2>/dev/null || true
           ls -lh output/
 
       - name: Generate checksums
         run: |
           mkdir -p output
           cd output
+          rm -f SHA256SUMS
           if ls * >/dev/null 2>&1; then
-            sha256sum -- * > SHA256SUMS
+            sha256sum * > SHA256SUMS
           else
             touch SHA256SUMS
           fi
