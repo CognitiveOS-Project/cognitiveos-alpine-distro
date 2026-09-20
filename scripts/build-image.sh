@@ -6,7 +6,7 @@ SRC_DIR="$(realpath "$(dirname "$0")/..")"
 OUTPUT_DIR="${SRC_DIR}/output"
 OVERLAY_DIR="${SRC_DIR}/overlay"
 APORTS_DIR="/tmp/aports"
-APORTS_GIT="https://gitlab.alpinelinux.org/alpine/aports.git"
+APORTS_GIT="https://github.com/alpinelinux/aports.git"
 MKIMAGE_DEPS="abuild apk-tools alpine-conf busybox fakeroot syslinux xorriso squashfs-tools mtools grub-efi git go make"
 
 PROFILE=""
