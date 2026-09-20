@@ -2,8 +2,12 @@
 # shellcheck disable=SC2034,SC2086
 set -eu
 
-OVERLAY_DIR="${COGNITIVEOS_OVERLAY_DIR:-/workspace/overlay}"
-CPM_BIN="${CPM_BIN:-/workspace/cpm/build/bin/cpm}"
+# Derive the repo root from this script's location — never hardcode /workspace,
+# which is only valid inside the Docker build container.
+SCRIPT_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
+REPO_DIR="$(dirname "$SCRIPT_DIR")"
+OVERLAY_DIR="${COGNITIVEOS_OVERLAY_DIR:-$REPO_DIR/overlay}"
+CPM_BIN="${CPM_BIN:-$REPO_DIR/../cpm/build/bin/cpm}"
 
 echo "  -> Checking for build-stage dependencies in $OVERLAY_DIR..."
 
@@ -11,6 +15,7 @@ echo "  -> Checking for build-stage dependencies in $OVERLAY_DIR..."
 if [ ! -f "$CPM_BIN" ]; then
     echo "  -> cpm not found at $CPM_BIN, building from source..."
     BUILD_DIR="/tmp/cpm-build"
+    rm -rf "$BUILD_DIR"
     mkdir -p "$BUILD_DIR"
     git clone --depth=1 https://github.com/CognitiveOS-Project/cpm.git "$BUILD_DIR"
     (cd "$BUILD_DIR" && make build)

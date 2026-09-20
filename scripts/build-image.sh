@@ -7,7 +7,7 @@ OUTPUT_DIR="${SRC_DIR}/output"
 OVERLAY_DIR="${SRC_DIR}/overlay"
 APORTS_DIR="/tmp/aports"
 APORTS_GIT="https://gitlab.alpinelinux.org/alpine/aports.git"
-MKIMAGE_DEPS="abuild apk-tools alpine-conf busybox fakeroot syslinux xorriso squashfs-tools mtools grub-efi git go"
+MKIMAGE_DEPS="abuild apk-tools alpine-conf busybox fakeroot syslinux xorriso squashfs-tools mtools grub-efi git go make"
 
 PROFILE=""
 PACKAGES_FILE=""
