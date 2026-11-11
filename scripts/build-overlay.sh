@@ -51,28 +51,28 @@ fi
 CLASS="${CLASS:-standard}"
 case "$CLASS" in
     titan)
-        RAW_MODEL_QUERY="qwen2.5-235b-instruct-gguf"
-        WIDE_MODEL_QUERY=""
+        RAW_MODEL_QUERY="${RAW_MODEL_QUERY-qwen2.5-235b-instruct-gguf}"
+        WIDE_MODEL_QUERY="${WIDE_MODEL_QUERY-}"
         ;;
     standard)
-        RAW_MODEL_QUERY="qwen2.5-1.5b-instruct-gguf"
-        WIDE_MODEL_QUERY="gemma-4-8b-instruct-gguf"
+        RAW_MODEL_QUERY="${RAW_MODEL_QUERY-qwen2.5-1.5b-instruct-gguf}"
+        WIDE_MODEL_QUERY="${WIDE_MODEL_QUERY-gemma-4-8b-instruct-gguf}"
         ;;
     gateway)
-        RAW_MODEL_QUERY=""
-        WIDE_MODEL_QUERY=""
+        RAW_MODEL_QUERY="${RAW_MODEL_QUERY-}"
+        WIDE_MODEL_QUERY="${WIDE_MODEL_QUERY-}"
         ;;
     edge)
-        RAW_MODEL_QUERY="qwen2.5-0.5b-instruct-gguf"
-        WIDE_MODEL_QUERY="tiny-llm-gguf"
+        RAW_MODEL_QUERY="${RAW_MODEL_QUERY-qwen2.5-0.5b-instruct-gguf}"
+        WIDE_MODEL_QUERY="${WIDE_MODEL_QUERY-tiny-llm-gguf}"
         ;;
     micro)
-        RAW_MODEL_QUERY=""
-        WIDE_MODEL_QUERY=""
+        RAW_MODEL_QUERY="${RAW_MODEL_QUERY-}"
+        WIDE_MODEL_QUERY="${WIDE_MODEL_QUERY-}"
         ;;
     *)
-        RAW_MODEL_QUERY="qwen2.5-1.5b-instruct-gguf"
-        WIDE_MODEL_QUERY="qwen2.5-3b-instruct-gguf"
+        RAW_MODEL_QUERY="${RAW_MODEL_QUERY-qwen2.5-1.5b-instruct-gguf}"
+        WIDE_MODEL_QUERY="${WIDE_MODEL_QUERY-qwen2.5-3b-instruct-gguf}"
         ;;
 esac
 
