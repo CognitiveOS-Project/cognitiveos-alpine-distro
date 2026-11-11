@@ -45,6 +45,15 @@ binaries. Each repo owns its own build, test, and toolchain (CGo, cross-compile,
 | `REGISTRY_TOKEN` | release.yml | Bearer token for registry-server publish |
 | `REGISTRY_URL` | release.yml | Registry base URL (default: official primary) |
 
+## Process Enforcements (MANDATORY)
+
+All work in this repo MUST follow the CognitiveOS Process Enforcements:
+
+- `product-specs/docs/ENFORCEMENTS.md` — SPECv1, GHW, VibeLeading, ABSEv1
+- `sdlc/docs/ENFORCEMENTS.md` — same content (mirror)
+
+These enforcements are binding on every contributor, agent, and automation. No work may bypass them except on explicit user instruction (maintainer emergency).
+
 ## Makefile Targets
 
 | Target | Description |
