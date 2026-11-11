@@ -1,7 +1,10 @@
 ARG CGO_ENABLED=0
+ARG DOWNLOAD_MODELS=0
 FROM golang:1.26-alpine AS builder
 ARG CGO_ENABLED
+ARG DOWNLOAD_MODELS
 ENV CGO_ENABLED=${CGO_ENABLED}
+ENV DOWNLOAD_MODELS=${DOWNLOAD_MODELS}
 RUN sed -i 's/#http/http/g' /etc/apk/repositories && apk update
 RUN apk add --no-cache git ca-certificates cmake build-base make
 WORKDIR /src
