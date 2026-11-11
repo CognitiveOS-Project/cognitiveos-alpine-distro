@@ -71,6 +71,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify ISO build (standard-x86_64)
         run: make iso
+      - name: Ensure output directory is writable
+        run: mkdir -p output && chmod 777 output
       - name: Verify RPi build (edge-armv7)
         run: make rpi
       - name: Check binary sizes
