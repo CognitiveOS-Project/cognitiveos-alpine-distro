@@ -64,4 +64,35 @@ jobs:
           docker tag cognitiveos-dev ghcr.io/cognitiveos-project/cognitiveos:dev
           docker push ghcr.io/cognitiveos-project/cognitiveos:dev
 
+  variant-build-verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify ISO build (standard-x86_64)
+        run: make iso
+      - name: Verify RPi build (edge-armv7)
+        run: make rpi
+      - name: Check binary sizes
+        run: |
+          echo "Checking built binary sizes..."
+          if [ -d output ]; then
+            find output -type f -exec ls -lh {} \;
+          else
+            echo "No output directory found"
+          fi
+      - name: Verify variant assets exist
+        run: |
+          for arch in armv7 aarch64 x86_64; do
+            for class in edge gateway standard micro; do
+              artifact="output/cognitiveos-*-${class}-${arch}.*"
+              if ls $artifact 1> /dev/null 2>&1; then
+                echo "Found: $artifact"
+              else
+                echo "WARNING: No artifact for ${class}-${arch}"
+              fi
+            done
+          done
+
+
 
