@@ -42,7 +42,8 @@ docker:
 
 # Build a dev runtime image (CGO_ENABLED=0) for CI verification
 docker.dev:
-	docker build --build-arg CGO_ENABLED=0 \
+	docker build --build-arg CGO_ENABLED=${CGO_ENABLED:-0} \
+		--build-arg DOWNLOAD_MODELS=${DOWNLOAD_MODELS:-0} \
 		-f docker/dev/Dockerfile \
 		-t cognitiveos-dev .
 
