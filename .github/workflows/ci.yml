@@ -31,6 +31,10 @@ jobs:
           go-version: "1.26"
       - name: Verify each repo builds via its own Makefile
         run: make verify-repos
+      - name: Verify built binaries exist, non-empty, ELF format
+        run: |
+          make docker.build
+          make verify-binaries
 
   script-check:
     runs-on: ubuntu-latest
