@@ -10,7 +10,7 @@ BUILD_DIR := ./build
 SCRIPTS_DIR := ./scripts
 
 .PHONY: all iso rpi clean distclean docker docker.build docker.dev shell checksums sign
-.PHONY: install-local distro-tarball publish-cgp release deps verify-repos release-assets publish-all publish-all-safe
+.PHONY: install-local distro-tarball publish-cgp release deps verify-repos verify-binaries release-assets publish-all publish-all-safe
 .PHONY: release-variant docker-release-arch docker-push-arch
 
 all: iso rpi checksums sign
@@ -35,6 +35,23 @@ docker.build:
 	$(SHELL) $(SCRIPTS_DIR)/build-overlay.sh
 	mkdir -p $(BUILD_DIR)/out
 	cp -a $(OVERLAY_DIR)/. $(BUILD_DIR)/out/
+
+# Verify built binaries exist, are non-empty, and are ELF format
+verify-binaries: docker.build
+	@echo "=== Verifying built binaries ==="
+	@for bin in coginit cpm coginfer cognitiveosd cognitiveos-cli; do \
+		echo "Checking $$bin..."; \
+		test -f "$(BUILD_DIR)/bin/$$bin" || { echo "MISSING: $(BUILD_DIR)/bin/$$bin"; exit 1; }; \
+		test -s "$(BUILD_DIR)/bin/$$bin" || { echo "EMPTY: $(BUILD_DIR)/bin/$$bin"; exit 1; }; \
+		file "$(BUILD_DIR)/bin/$$bin" | grep -q "ELF" || { echo "NOT ELF: $(BUILD_DIR)/bin/$$bin"; exit 1; }; \
+	done
+	@for bin in $(BUILD_DIR)/bin/bridges/*; do \
+		[ -f "$$bin" ] || continue; \
+		echo "Checking $$(basename $$bin)..."; \
+		test -s "$$bin" || { echo "EMPTY: $$bin"; exit 1; }; \
+		file "$$bin" | grep -q "ELF" || { echo "NOT ELF: $$bin"; exit 1; }; \
+	done
+	@echo "All binaries verified."
 
 # Build the builder image (calls docker.build inside the container)
 docker:
