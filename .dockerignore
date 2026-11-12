@@ -1,6 +1,7 @@
 .git/
 .gitignore
 .DS_Store
+._*
 AGENTS.md
 README.md
 LICENSE
